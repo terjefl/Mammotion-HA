@@ -65,8 +65,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "job_paused_in_dock": {
-        "name": "Job paused in dock"
+      "job_paused": {
+        "name": "Job paused"
       }
     },
     "sensor": {

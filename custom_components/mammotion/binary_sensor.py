@@ -37,14 +37,15 @@ BINARY_SENSORS: tuple[MammotionBinarySensorEntityDescription, ...] = (
     ),
 )
 
-# Luba 1 only — on Luba 1 a mower sent to dock mid-job stays in a
-# charging/idle activity_mode with the job merely parked, rather than
-# switching to MODE_PAUSE like Luba 2 / Yuka do. bp_info != 0 indicates
-# a stored/resumable job (breakpoint) that activity_mode alone doesn't surface.
+# Luba 1 only — on Luba 1, a job paused (manually, or by returning to dock
+# mid-job) stays paused with a resumable breakpoint until the mower is sent
+# back out and actually reaches that point, rather than clearing immediately
+# like MODE_PAUSE does on Luba 2 / Yuka. bp_info != 0 indicates that stored,
+# resumable breakpoint — regardless of where the mower currently is.
 LUBA_1_ONLY_BINARY_SENSORS: tuple[MammotionBinarySensorEntityDescription, ...] = (
     MammotionBinarySensorEntityDescription(
-        key="job_paused_in_dock",
-        translation_key="job_paused_in_dock",
+        key="job_paused",
+        translation_key="job_paused",
         device_class=None,
         is_on_fn=lambda mower_data: mower_data.report_data.work.bp_info != 0,
         entity_category=EntityCategory.DIAGNOSTIC,
