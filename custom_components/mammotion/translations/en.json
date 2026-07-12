@@ -65,6 +65,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "job_paused_in_dock": {
+        "name": "Job paused in dock"
+      }
+    },
     "sensor": {
       "error_1_message": {
         "name": "Last error"
