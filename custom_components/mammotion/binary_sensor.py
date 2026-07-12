@@ -12,6 +12,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pymammotion.data.model.device import MowingDevice
+from pymammotion.utility.device_type import DeviceType
 
 from . import MammotionConfigEntry
 from .coordinator import MammotionBaseUpdateCoordinator
@@ -36,6 +37,20 @@ BINARY_SENSORS: tuple[MammotionBinarySensorEntityDescription, ...] = (
     ),
 )
 
+# Luba 1 only — on Luba 1 a mower sent to dock mid-job stays in a
+# charging/idle activity_mode with the job merely parked, rather than
+# switching to MODE_PAUSE like Luba 2 / Yuka do. bp_info != 0 indicates
+# a stored/resumable job (breakpoint) that activity_mode alone doesn't surface.
+LUBA_1_ONLY_BINARY_SENSORS: tuple[MammotionBinarySensorEntityDescription, ...] = (
+    MammotionBinarySensorEntityDescription(
+        key="job_paused_in_dock",
+        translation_key="job_paused_in_dock",
+        device_class=None,
+        is_on_fn=lambda mower_data: mower_data.report_data.work.bp_info != 0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -50,6 +65,14 @@ async def async_setup_entry(
             MammotionBinarySensorEntity(mower.reporting_coordinator, entity_description)
             for entity_description in BINARY_SENSORS
         )
+
+        if DeviceType.is_luba1(mower.device.device_name, mower.device.product_key):
+            async_add_entities(
+                MammotionBinarySensorEntity(
+                    mower.reporting_coordinator, entity_description
+                )
+                for entity_description in LUBA_1_ONLY_BINARY_SENSORS
+            )
 
 
 class MammotionBinarySensorEntity(MammotionBaseEntity, BinarySensorEntity):
