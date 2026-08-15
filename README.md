@@ -26,9 +26,12 @@ mower is out working — which is both when it is beyond the proxy's reach and w
 most rapidly. Sitting in the dock, where Bluetooth does reach, costs nothing and these changes do
 nothing.
 
-Probably not for you if a proxy covers your whole lawn. Bluetooth carries the telemetry for free
-there, and the library skips the cloud request whenever a Bluetooth stream is already running, so
-there is nothing here to gain.
+Probably not for you if the mower is within Bluetooth reach the whole time it works. Bluetooth
+carries the telemetry for free there, and the library skips the cloud request whenever a Bluetooth
+stream is already running, so there is nothing here to gain. That covers a proxy reaching the whole
+lawn — and also the neatest solution to this problem, which some owners use: fitting an ESPHome
+Bluetooth proxy to the mower itself, so coverage travels with it and never drops. If you have done
+that, you do not need this fork.
 
 ## What is different from upstream
 
@@ -107,10 +110,23 @@ see upstream:
 - [Upstream README](https://github.com/mikey0000/Mammotion-HA#readme)
 - [Getting started (wiki)](https://github.com/mikey0000/Mammotion-HA/wiki/Getting-Started)
 
+## Status and expectations
+
+**Use this at your own risk.** It controls a heavy machine that drives around unsupervised, and it
+is not a maintained product.
+
+I intend to keep this roughly in sync with upstream, but I am not promising it. This fork exists to
+serve my own setup, and that is what decides when it gets attention. It may sit behind upstream for
+a while, or indefinitely. There is no support, no release schedule, and no guarantee that a given
+upstream fix has landed here yet.
+
+If any of that is a problem for you, the [original](https://github.com/mikey0000/Mammotion-HA) is
+actively maintained and is the better choice.
+
 ## Relationship to upstream
 
-This fork tracks `mikey0000/Mammotion-HA` and merges new upstream releases as they appear. It is not
-a competing project and is not trying to become one.
+This fork tracks `mikey0000/Mammotion-HA` and merges new upstream releases when I get to it. It is
+not a competing project and is not trying to become one.
 
 Neither change here has been proposed upstream. If you hit a bug, work out first whether it is in
 this fork's changes or in the integration generally — if it is the latter, upstream is the right

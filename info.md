@@ -18,8 +18,16 @@ Worth trying if **both** apply:
 Partial coverage is the worst case: the quota is spent while the mower is out working, beyond the
 proxy's reach and changing status constantly. In the dock it costs nothing.
 
-If a proxy covers your whole lawn, this fork gains you nothing — the cloud request is skipped
-whenever a Bluetooth stream is running.
+If the mower stays within Bluetooth reach while it works, this fork gains you nothing — the cloud
+request is skipped whenever a Bluetooth stream is running. That applies to a proxy covering the
+whole lawn, and to the neatest fix of all, which some owners use: fitting an ESPHome Bluetooth proxy
+to the mower itself so coverage travels with it.
+
+## Status
+
+**Use at your own risk.** I intend to keep this roughly in sync with upstream but do not promise it
+— this fork serves my own setup, and that decides when it gets attention. No support, no release
+schedule. If that does not suit you, the original is actively maintained and is the better choice.
 
 ## What differs from upstream
 
