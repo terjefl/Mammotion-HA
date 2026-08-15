@@ -1,4 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Report a bug with the Integration
+  - name: Bug in the Mammotion integration generally (not specific to this fork)
     url: https://github.com/mikey0000/Mammotion-HA/issues
+    about: >-
+      This fork only adds two changes for cloud-only setups. Anything else is
+      upstream's code — please report it there, where the maintainer and other
+      users can help.
