@@ -3,24 +3,32 @@
 A fork of [mikey0000/Mammotion-HA](https://github.com/mikey0000/Mammotion-HA), the Home Assistant
 integration for Mammotion robot lawn mowers.
 
-This fork exists to carry two changes aimed at **cloud-only setups without Bluetooth coverage**.
-Everything else is upstream's work, tracked and merged in periodically.
+This fork exists to carry two changes aimed at setups where the mower **spends its working hours
+out of Bluetooth range** and therefore falls back to the cloud while mowing. Everything else is
+upstream's work, tracked and merged in periodically.
 
 > **Most people should install [the original](https://github.com/mikey0000/Mammotion-HA), not this.**
-> This fork is maintained as a hobby, tested against exactly one mower (a Luba 1 running cloud-only),
-> and comes with no support. It is only worth using if you recognise your own setup below.
+> This fork is maintained as a hobby, tested against one Luba 1 and one Yuka, and comes with no
+> support. It is only worth using if you recognise your own setup below.
 
 ## Is this fork for you?
 
 Probably, if **both** of these are true:
 
-- Your mower has no usable Bluetooth connection to Home Assistant — no proxy in range, or you run
-  the integration purely over the cloud.
+- Your mower talks to Home Assistant over the cloud while it is out mowing. That includes having no
+  Bluetooth at all — but also the far more common case of a Bluetooth proxy that only reaches the
+  dock area, so coverage drops the moment the mower drives off.
 - Your mower goes unresponsive after working fine for a few hours, and recovers on its own much
   later. Commands stop reaching it; entities go stale or unavailable.
 
-Probably not, if you have Bluetooth working. Both changes here are no-ops or near no-ops on
-Bluetooth, so you would gain nothing.
+Partial coverage is the worst case, not a mild one. The send quota is spent precisely while the
+mower is out working — which is both when it is beyond the proxy's reach and when its status changes
+most rapidly. Sitting in the dock, where Bluetooth does reach, costs nothing and these changes do
+nothing.
+
+Probably not for you if a proxy covers your whole lawn. Bluetooth carries the telemetry for free
+there, and the library skips the cloud request whenever a Bluetooth stream is already running, so
+there is nothing here to gain.
 
 ## What is different from upstream
 
@@ -30,8 +38,9 @@ The Mammotion library allows a device 600 outbound cloud messages per rolling 12
 that budget is exhausted, *every* send is blocked for hours — which is what makes the mower appear
 to connect, work for a while, and then die.
 
-On a cloud-only setup, two code paths spent that budget during a single mow, because both were
-driven by the mower's status changing, and status oscillates constantly while mowing:
+Whenever the mower is reachable only over the cloud, two code paths spent that budget during a
+single mow, because both were driven by the mower's status changing, and status oscillates
+constantly while mowing:
 
 - the report coordinator requested a fresh snapshot on every status transition
 - the error coordinator issued two reads on every entry into working, returning, lock or pause
@@ -52,8 +61,10 @@ quota has nothing to do with credentials. The device now degrades to offline cle
 Mammotion broker and have no send quota at all. On those, this change is simply inert. It matters
 for older firmware, which is where Luba 1 owners tend to be.
 
-Bluetooth users are unaffected — the report stream is free over Bluetooth, and active-mode telemetry
-already flows through the Bluetooth polling loop.
+Where Bluetooth does reach, nothing changes: the library skips the cloud request entirely while a
+Bluetooth stream is running, and active-mode telemetry already flows through the Bluetooth polling
+loop. The change only takes effect once the mower drops off Bluetooth — which, with a dock-area
+proxy, is exactly when it starts mowing.
 
 The work behind this change comes from [jirkaorlik-hash's fork](https://github.com/jirkaorlik-hash/Mammotion-HA);
 see [Credits](#credits).

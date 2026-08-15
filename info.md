@@ -1,20 +1,25 @@
 # Mammotion — Home Assistant Integration (fork)
 
 A fork of [mikey0000/Mammotion-HA](https://github.com/mikey0000/Mammotion-HA) carrying two changes
-for **cloud-only setups without Bluetooth coverage**. Everything else is upstream's work.
+for setups where the mower **spends its working hours out of Bluetooth range** and falls back to the
+cloud while mowing. Everything else is upstream's work.
 
 > **Most people should install [the original](https://github.com/mikey0000/Mammotion-HA) instead.**
-> This fork is a hobby effort, tested against a single Luba 1 running cloud-only, with no support.
+> This fork is a hobby effort, tested against one Luba 1 and one Yuka, with no support.
 
 ## Is this for you?
 
 Worth trying if **both** apply:
 
-- No usable Bluetooth connection between the mower and Home Assistant.
-- The mower works for a few hours, then stops responding to commands and recovers by itself much
-  later.
+- The mower reaches Home Assistant over the cloud while out mowing — either no Bluetooth at all, or,
+  more commonly, a proxy that only covers the dock area.
+- It works for a few hours, then stops responding to commands and recovers by itself much later.
 
-If Bluetooth works for you, this fork gains you nothing — both changes are inert over Bluetooth.
+Partial coverage is the worst case: the quota is spent while the mower is out working, beyond the
+proxy's reach and changing status constantly. In the dock it costs nothing.
+
+If a proxy covers your whole lawn, this fork gains you nothing — the cloud request is skipped
+whenever a Bluetooth stream is running.
 
 ## What differs from upstream
 
