@@ -1,147 +1,122 @@
-# Mammotion - Home Assistant Integration [![Discord](https://img.shields.io/discord/1247286396297678879)](https://discord.gg/vpZdWhJX8x)
+# Mammotion-HA — fork
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mikey0000&repository=mammotion-HA&category=Integration)
+A fork of [mikey0000/Mammotion-HA](https://github.com/mikey0000/Mammotion-HA), the Home Assistant
+integration for Mammotion robot lawn mowers.
 
-💬 [Join us on Discord](https://discord.gg/vpZdWhJX8x)
+This fork exists to carry two changes aimed at **cloud-only setups without Bluetooth coverage**.
+Everything else is upstream's work, tracked and merged in periodically.
 
-This integration allows you to control and monitor Mammotion products, e.g robot lawn mowers using Home Assistant.
+> **Most people should install [the original](https://github.com/mikey0000/Mammotion-HA), not this.**
+> This fork is maintained as a hobby, tested against exactly one mower (a Luba 1 running cloud-only),
+> and comes with no support. It is only worth using if you recognise your own setup below.
 
-⚠️ **Please note:** This integration is still a work in progress. You may encounter unfinished features or bugs. If you come across any issues, please open an issue on the GitHub repository. 🐛
+## Is this fork for you?
 
-## Roadmap 🗺️
+Probably, if **both** of these are true:
 
-- [x] Bluetooth (BLE) support
-- [x] Wi-Fi support (Including SIM 3G/4G)
-- [x] Camera stream
-- [ ] Scheduling
-- [ ] Mapping and zone management
-- [x] Maps
-- [x] Firmware updates
-- [x] Automations
-- [ ] More...
+- Your mower has no usable Bluetooth connection to Home Assistant — no proxy in range, or you run
+  the integration purely over the cloud.
+- Your mower goes unresponsive after working fine for a few hours, and recovers on its own much
+  later. Commands stop reaching it; entities go stale or unavailable.
 
-## Features ✨
+Probably not, if you have Bluetooth working. Both changes here are no-ops or near no-ops on
+Bluetooth, so you would gain nothing.
 
-- Start, stop, pause, and dock the mower
-- Monitor the mower's status (e.g., mowing, charging, idle)
-- View the mower's battery level
-- Start a mow based on configuration
-- Start an existing scheduled task/s
-- More features being added all the time!
+## What is different from upstream
 
-- Supports Spino pool cleaners
+### 1. Staying under the cloud send quota
 
-## Prerequisites 📋
+The Mammotion library allows a device 600 outbound cloud messages per rolling 12-hour window. Once
+that budget is exhausted, *every* send is blocked for hours — which is what makes the mower appear
+to connect, work for a while, and then die.
 
-> [!WARNING]
-> **Home Assistant Minimum Version 2026.1.0**
+On a cloud-only setup, two code paths spent that budget during a single mow, because both were
+driven by the mower's status changing, and status oscillates constantly while mowing:
 
-- A second account with your mower/s shared to it for using Wi-Fi (If you use your primary accouunt it will log you out of your mobile app)
-- (Optional)[Bluetooth proxy for Home Assistant](https://esphome.io/components/bluetooth_proxy.html)
+- the report coordinator requested a fresh snapshot on every status transition
+- the error coordinator issued two reads on every entry into working, returning, lock or pause
 
-## Troubleshooting
+This fork replaces per-transition polling with a single continuous report stream, held only while
+the mower is in an active mode and renewed on a 270-second timer, just inside the device's
+300-second window. The mower then pushes state every few seconds at no cost to the quota. A whole
+mow costs roughly one send per five minutes instead of one or three per transition. Leaving active
+mode stops the stream and takes one debounced snapshot to capture the settled state.
 
-- Sometimes using the account number works instead of email address when adding via discovery (not sure why)
+The error coordinator's reads are debounced to at most once per ten minutes.
 
-- Connection timeout to host https://api.link.aliyun.com/living/account/region/get - unblock china
+Separately, the rate-limit error itself is now handled. It previously surfaced as raw tracebacks,
+and was partly treated as an authentication problem — triggering a pointless re-login, since a send
+quota has nothing to do with credentials. The device now degrades to offline cleanly.
 
-## Installation 🛠️
+**Note on firmware:** mowers running firmware **1.30.25.1 or newer** have migrated to a different
+Mammotion broker and have no send quota at all. On those, this change is simply inert. It matters
+for older firmware, which is where Luba 1 owners tend to be.
 
-This integration can be installed using [HACS](https://hacs.xyz/)
+Bluetooth users are unaffected — the report stream is free over Bluetooth, and active-mode telemetry
+already flows through the Bluetooth polling loop.
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
+The work behind this change comes from [jirkaorlik-hash's fork](https://github.com/jirkaorlik-hash/Mammotion-HA);
+see [Credits](#credits).
 
-This integration is not available in the default HACS store. You will need to add it as a custom repository.
+### 2. `job_paused` binary sensor (Luba 1 only)
 
-1. Go to HACS > Integrations and click on the 3 dots in the top right corner.
-2. Select "Custom repositories".
-3. In the "Repository" field, paste this URL: `https://github.com/mikey0000/Mammotion-HA`
-4. For "Category", select "Integration".
-5. Click "Add".
-6. You can now search for "Mammotion" within HACS and install it.
-7. After installation, restart Home Assistant.
-8. Go to **Settings > Devices & Services** and click **+ Add Integration** to configure Mammotion.
+A diagnostic binary sensor exposing whether the mower is holding a resumable job in memory.
 
-## Usage 🎮
+On Luba 1, a job that is paused — manually, or by returning to the dock mid-job — keeps a stored
+breakpoint until the mower is sent back out and actually reaches that point. This differs from
+Luba 2 and Yuka, where the paused state clears immediately. The sensor reads that stored breakpoint
+directly, so it stays on while the mower sits in the dock with an unfinished job, which the mower's
+regular state does not tell you.
 
-### Getting Started
+Useful for automations along the lines of "if it stopped to charge mid-job, send it back out once
+charged". The entity is only created for Luba 1 hardware.
 
-See the wiki for how to [get started](https://github.com/mikey0000/Mammotion-HA/wiki/Getting-Started)
+Currently named "Job paused" in every language; translations for the other locales are not done yet.
 
-Once the integration is set up, you can control and monitor your Mammotion mower using Home Assistant. 🎉
+## Installation
 
-## Map Position Offset
+Via [HACS](https://hacs.xyz/) as a custom repository:
 
-Satellite map tiles (Google Maps, OpenStreetMap, etc.) are sometimes misaligned relative to RTK GPS coordinates by several metres. Each mower exposes two number entities to correct this:
+1. In HACS, open the three-dot menu and choose **Custom repositories**.
+2. Repository: `https://github.com/terjefl/Mammotion-HA`
+3. Category: **Integration**, then **Add**.
+4. Search for "Mammotion" in HACS and install it.
+5. Restart Home Assistant.
+6. Go to **Settings → Devices & Services → + Add Integration** and configure Mammotion.
 
-- **Map offset latitude** — shifts the mower pin north (positive) or south (negative), in metres
-- **Map offset longitude** — shifts the mower pin east (positive) or west (negative), in metres
+If you already have the upstream integration installed, remove it first — both use the same
+`mammotion` domain and cannot coexist.
 
-**How to calibrate:**
+## Documentation
 
-1. Add a [Map card](https://www.home-assistant.io/dashboards/map/) and both offset entities to a Lovelace dashboard.
-2. Start the mower so it is moving at a known location you can identify on satellite imagery.
-3. Adjust **Map offset latitude** and **Map offset longitude** until the pin aligns with the mower's real position on the satellite layer.
-4. Values are saved automatically and survive restarts.
+This fork does not duplicate upstream's documentation, which would only go stale. For setup,
+prerequisites, supported hardware, map offsets, companion dashboard plugins and troubleshooting,
+see upstream:
 
-Typical offsets are within ±20 m. Positive latitude = north, positive longitude = east.
+- [Upstream README](https://github.com/mikey0000/Mammotion-HA#readme)
+- [Getting started (wiki)](https://github.com/mikey0000/Mammotion-HA/wiki/Getting-Started)
 
-## Dashboard Plugins
+## Relationship to upstream
 
-Companion HACS dashboard plugins that extend the Mammotion integration with visual tools.
+This fork tracks `mikey0000/Mammotion-HA` and merges new upstream releases as they appear. It is not
+a competing project and is not trying to become one.
 
-### Mammotion Assets
+Neither change here has been proposed upstream. If you hit a bug, work out first whether it is in
+this fork's changes or in the integration generally — if it is the latter, upstream is the right
+place, and please report it there rather than here.
 
-Images and scripts for displaying Mammotion mowers on a map in Home Assistant — mower card backgrounds, side-profile images, map icons, RTK/dock assets, and the `geojson.js` script that renders mowing areas with labels.
+Currently based on upstream `0.6.4-beta12`.
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mikey0000&repository=ha-mammotion-assets&category=plugin)
+## Credits
 
-### Mammotion GeoJSON Map Plugin
+Essentially all of this code is written by [mikey0000](https://github.com/mikey0000) and the
+[contributors to Mammotion-HA](https://github.com/mikey0000/Mammotion-HA/graphs/contributors). This
+fork adds two changes on top of their work.
 
-A Lovelace resource that renders GeoJSON mowing areas on the map with area names and zone labels.
+The cloud send quota change originates from [jirkaorlik-hash](https://github.com/jirkaorlik-hash),
+and is used here unmodified.
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mikey0000&repository=ha-mammotion-geojson-map-plugin&category=plugin)
-
-### Mammotion SVG Pick and Place
-
-An interactive Lovelace card for placing, editing, and deleting SVG pattern tiles on your mower's map directly from the dashboard. Load an SVG, drag it into position, scale and rotate it, then send it to the device in one click via the `mammotion.svg_add` service.
-
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mikey0000&repository=ha-mammotion-svg-pick-n-place&category=plugin)
-
-## Troubleshooting 🔧
-
-If you encounter any issues with the Mammotion integration, please check the Home Assistant logs for error messages. You can also try the following troubleshooting steps:
-
-- Verify that you have Bluetooth proxy setup with Home Assistant.
-- Ensure that your mower is connected to your home network and accessible from Home Assistant.
-- Restart Home Assistant and check if the issue persists.
-- Make sure your not blocking China (Connection timeout to host https://api.link.aliyun.com/living/account/region/get)
-
-## Contributing to Translations
-
-We use Crowdin to manage our translations. If you'd like to contribute:
-
-1. Visit our [Crowdin project page](https://crowdin.com/project/mammotion-ha)
-2. Select the language you'd like to translate to
-3. Start translating!
-
-Your contributions will be automatically submitted as pull requests to this repository.
-
-## PyMammotion Library 📚
-
-This integration uses the [PyMammotion library](https://github.com/mikey0000/PyMammotion) to communicate with Mammotion mowers. PyMammotion provides a Python API for controlling and monitoring Mammotion robot mowers via MQTT, Cloud, and Bluetooth.
-
-If the problem continues, please file an issue on the GitHub repository for further assistance. 🙏
-
-## Support me
-
-<a href='https://ko-fi.com/DenimJackRabbit' target='_blank'><img height='46' style='border:0px;height:46px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
-
-### Referral Links
-
-[Buy a Mammotion Lawn Mower (Amazon)](https://amzn.to/4cOLULU)
-[Buy a Mammotion Lawn Mower (Mammotion)](https://mammotion.com/?ref=denimjackrabbit)
-
-## Credits 👥
+The integration communicates with mowers through the
+[PyMammotion](https://github.com/mikey0000/PyMammotion) library.
 
 [![Contributors](https://contrib.rocks/image?repo=mikey0000/Mammotion-HA)](https://github.com/mikey0000/Mammotion-HA/graphs/contributors)
