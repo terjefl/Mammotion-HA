@@ -2,7 +2,7 @@
   "domain": "mammotion",
   "name": "Mammotion",
   "version": "0.6.4-beta12",
-  "issue_tracker": "https://github.com/mikey0000/Mammotion-HA/issues",
+  "issue_tracker": "https://github.com/terjefl/Mammotion-HA/issues",
   "integration_type": "device",
   "bluetooth": [
     {
@@ -17,13 +17,13 @@
     }
   ],
   "codeowners": [
-    "@mikey0000"
+    "@terjefl"
   ],
   "config_flow": true,
   "dependencies": [
     "bluetooth_adapters"
   ],
-  "documentation": "https://github.com/mikey0000/Mammotion-HA/wiki",
+  "documentation": "https://github.com/terjefl/Mammotion-HA#readme",
   "loggers": [
     "pymammotion"
   ],

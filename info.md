@@ -1,60 +1,50 @@
-# Mammotion - Home Assistant Integration [![Discord](https://img.shields.io/discord/1247286396297678879)](https://discord.gg/vpZdWhJX8x)
+# Mammotion — Home Assistant Integration (fork)
 
-💬 [Join us on Discord](https://discord.gg/vpZdWhJX8x)
+A fork of [mikey0000/Mammotion-HA](https://github.com/mikey0000/Mammotion-HA) carrying two changes
+for **cloud-only setups without Bluetooth coverage**. Everything else is upstream's work.
 
-[Support this project on Ko-fi!](https://ko-fi.com/DenimJackRabbit)
+> **Most people should install [the original](https://github.com/mikey0000/Mammotion-HA) instead.**
+> This fork is a hobby effort, tested against a single Luba 1 running cloud-only, with no support.
 
-This integration allows you to control and monitor your Mammotion Luba, Luba 2 & Yuka robot mowers using Home Assistant.
+## Is this for you?
 
-⚠️ **Please note:** This integration is still a work in progress. You may encounter unfinished features or bugs. If you come across any issues, please open an issue on the GitHub repository. 🐛
+Worth trying if **both** apply:
 
-## Roadmap 🗺️
+- No usable Bluetooth connection between the mower and Home Assistant.
+- The mower works for a few hours, then stops responding to commands and recovers by itself much
+  later.
 
-- [x] Bluetooth (BLE) support
-- [x] Wi-Fi support
-- [ ] Scheduling
-- [ ] Mapping and zone management
-- [ ] Firmware updates
-- [x] Automations
-- [ ] More...
+If Bluetooth works for you, this fork gains you nothing — both changes are inert over Bluetooth.
 
-## Features ✨
+## What differs from upstream
 
-- Start and stop the mower
-- Monitor the mower's status (e.g., mowing, charging, idle)
-- View the mower's battery level
-- More features being added all the time!
+**Staying under the cloud send quota.** A device is allowed 600 outbound cloud messages per rolling
+12-hour window; exhausting it blocks every send for hours. Two code paths burned that budget during
+a single mow because both fired on mower status changes, which oscillate constantly while mowing.
+This fork holds one continuous report stream while the mower is active, renewed just inside the
+device's window, so a whole mow costs about one message per five minutes. The rate-limit error is
+also handled properly instead of surfacing as tracebacks and triggering a pointless re-login.
 
-## Prerequisites 📋
+Mowers on firmware 1.30.25.1 or newer have no send quota at all, so this change is inert there.
 
-- Home Assistant installed and running
-- Mower connected to your home network
-- [Bluetooth proxy for Home Assistant](https://esphome.io/components/bluetooth_proxy.html)
+**`job_paused` sensor (Luba 1 only).** A diagnostic binary sensor showing whether the mower holds a
+resumable job in memory. On Luba 1 a paused job keeps its breakpoint until the mower is sent back
+out, unlike Luba 2 and Yuka — so this stays on while the mower sits in the dock with unfinished
+work, which its normal state does not reveal.
 
-Here's a cleaned-up version of the installation instructions for your GitHub repo README:
+## Setup
 
-## Usage 🎮
+For prerequisites, supported hardware, map offsets, companion dashboard plugins and troubleshooting,
+see upstream's [README](https://github.com/mikey0000/Mammotion-HA#readme) and
+[wiki](https://github.com/mikey0000/Mammotion-HA/wiki/Getting-Started). This fork does not duplicate
+them, so they cannot go stale here.
 
-Once the integration is set up, you can control and monitor your Mammotion mower using Home Assistant. 🎉
+Remove the upstream integration first if you have it — both use the `mammotion` domain and cannot
+coexist.
 
-## Troubleshooting 🔧
+## Credits
 
-If you encounter any issues with the Mammotion integration, please check the Home Assistant logs for error messages. You can also try the following troubleshooting steps:
-
-- Verify that you have Bluetooth proxy setup with Home Assistant.
-- Ensure that your mower is connected to your home network and accessible from Home Assistant.
-- Restart Home Assistant and check if the issue persists.
-
-## PyMammotion Library 📚
-
-This integration uses the [PyMammotion library](https://github.com/mikey0000/PyMammotion) to communicate with Mammotion mowers. PyMammotion provides a Python API for controlling and monitoring Mammotion robot mowers via MQTT, Cloud, and Bluetooth.
-
-If the problem continues, please file an issue on the GitHub repository for further assistance. 🙏
-
-## Credits 👥
-
-[![Contributors](https://contrib.rocks/image?repo=mikey0000/Mammotion-HA)](https://github.com/mikey0000/Mammotion-HA/graphs/contributors)
-
-## Supporters
-
-Thank you so much!
+Essentially all of this code is by [mikey0000](https://github.com/mikey0000) and the
+[Mammotion-HA contributors](https://github.com/mikey0000/Mammotion-HA/graphs/contributors). The send
+quota change originates from [jirkaorlik-hash](https://github.com/jirkaorlik-hash). Communication
+with mowers goes through the [PyMammotion](https://github.com/mikey0000/PyMammotion) library.
