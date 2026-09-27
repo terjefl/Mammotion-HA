@@ -565,10 +565,36 @@ def async_add_area_entities(
 
     switch_entities: list[MammotionConfigAreaSwitchEntity] = []
     computed = coordinator.data.map.computed_areas
-    all_current_areas = {a.hash for a in computed}
     map_area_hashes: set[int] = {
         int(k) for k in coordinator.data.map.area if str(k).lstrip("-").isdigit()
     }
+
+    # Hold the area set against the device's own area manifest (root hash list,
+    # sub_cmd 0).  ``HashList.update_hash_lists`` prunes ``map.area`` against the
+    # UNION of every sub_cmd manifest, so an area hash that also appears in the
+    # sub_cmd 3 (line) list survives every successful map sync and keeps its
+    # switch alive long after the device dropped the area.  Measured on this
+    # Luba 1 (34 hashes in the area manifest, 151 in the line list): four deleted
+    # areas were still cached, and mowing one returned "Invalid task area
+    # detected".  An empty manifest is a transient refresh state — never filter
+    # on it.
+    area_manifest: set[int] = set(coordinator.data.map.area_root_hashlist)
+    if area_manifest:
+        stale_cached = map_area_hashes - area_manifest
+        if stale_cached:
+            async_remove_stale_area_entities(coordinator, stale_cached)
+            for stale_hash in stale_cached:
+                added_areas.discard(stale_hash)
+                for n in [
+                    n
+                    for n, e in list(area_entities_by_name.items())
+                    if e.area == stale_hash
+                ]:
+                    del area_entities_by_name[n]
+        computed = [a for a in computed if a.hash in area_manifest]
+        map_area_hashes &= area_manifest
+
+    all_current_areas = {a.hash for a in computed}
 
     # Trigger re-fetch when the device hasn't yet sent names for all areas.
     # Luba 1 / Yuka never provides area_name, so skip for it.
