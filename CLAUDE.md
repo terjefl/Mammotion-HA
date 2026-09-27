@@ -32,6 +32,13 @@ When making changes, follow existing patterns in similar files and follow Home A
 
 - All imports within the integration must be relative (e.g. `from . import Foo`, `from .services import bar`). Never use `from custom_components.mammotion import ...` — HA loads integrations in a way that makes absolute imports from `custom_components` fail at runtime.
 
+## Bluetooth via ESPHome proxies
+
+- Most users reach the mower over BLE through ESP32 (ESPHome) proxies, not a local adapter. Home Assistant's bluetooth integration owns scanning; this integration only forwards advertisements to pymammotion: `_register_ble_reconnect_callback` in `__init__.py` (per configured mower) and the report coordinator's `_add_ble_device` / `update_ble_device` path. Both re-create the BLE transport if it is missing, so any place that must _keep_ it detached (the Bluetooth switch) has to guard them on the stored switch state.
+- Connect, cooldown, RSSI gating and the stale GATT-cache recovery live in pymammotion's `BLETransport` (see the BLE notes in Luba-API's CLAUDE.md). Do not add reconnect or retry logic here; fix it in the library.
+- The emergency nudge buttons are available only while the transport is usable (fresh advertisement, RSSI above `-90`, not in cooldown) or Wi-Fi movement is enabled. Flapping availability at the edge of proxy range is expected; a button's state changing back to its last-pressed timestamp when it becomes available again is not a press.
+- Symptom map from reports: "Characteristic 0000ff02 … was not found" right after connect is a stale cached GATT table (recovered in pymammotion ≥ 0.9.0b3); "in cooldown (120s remaining)" follows one real failure; RSSI 0 in the report frame plus unavailable nudge buttons means the link is down, not that the proxy stopped hearing the mower.
+
 ## Translations
 
 - When adding or renaming any entity (sensor, switch, button, number, select, etc.) or an ENUM entity state, you MUST update the translations in **every** language file, not just English.
@@ -39,3 +46,13 @@ When making changes, follow existing patterns in similar files and follow Home A
 - Translate the entity `name` and every ENUM `state` value into each language's own language — do not copy the English text into the other locales as a placeholder.
 - Also add an icon entry in `custom_components/mammotion/icons.json` for the new entity where appropriate.
 - After editing, confirm every JSON file still parses and that the new key (with all its `state` values) is present in each file before considering the change complete.
+
+## Good practices
+
+- When reviewing entity actions, do not suggest extra defensive checks for input fields that are already validated by Home Assistant's service/action schemas and entity selection filters. Suggest additional guards only when data bypasses those validators or is transformed into a less-safe form.
+- When validation guarantees a dict key exists, prefer direct key access (`data["key"]`) instead of `.get("key")` so contract violations are surfaced instead of silently masked.
+- Keep comments concise. Prefer one short line stating the non-obvious constraint, or no comment at all.
+- Do not add comments that just restate the code on the following line(s) (e.g. `# Check if initialized` above `if self.initialized:`). Comments should only explain why (non-obvious constraints, surprising behavior, or workarounds), never what. Never add comments that justify a change by referencing what the code looked like before. Comments in tests that explain why a function call or assertion is made are ok.
+- Do not add section or divider comments (e.g. `# --- XYZ Triggers ---`) inside or outside of functions, since those can easily become stale and be misleading.
+- When catching exceptions, try-clauses should be as small as possible, i.e. avoid wrapping large blocks of code in a try-clause, and avoid catching exceptions from functions that are not expected to raise them.
+- Sensitive service actions, i.e. those that can change configuration or have security implications, should require an admin user. Register them with the `async_register_admin_service` service helper, which checks this for you.

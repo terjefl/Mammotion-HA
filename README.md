@@ -3,9 +3,9 @@
 A fork of [mikey0000/Mammotion-HA](https://github.com/mikey0000/Mammotion-HA), the Home Assistant
 integration for Mammotion robot lawn mowers.
 
-This fork exists to carry two changes aimed at setups where the mower **spends its working hours
-out of Bluetooth range** and therefore falls back to the cloud while mowing. Everything else is
-upstream's work, tracked and merged in periodically.
+This fork exists mainly to carry a change aimed at setups where the mower **spends its working
+hours out of Bluetooth range** and therefore falls back to the cloud while mowing, plus two smaller
+fixes found along the way. Everything else is upstream's work, tracked and merged in periodically.
 
 > **Most people should install [the original](https://github.com/mikey0000/Mammotion-HA), not this.**
 > This fork is maintained as a hobby, tested against one Luba 1 and one Yuka, and comes with no
@@ -56,9 +56,10 @@ mode stops the stream and takes one debounced snapshot to capture the settled st
 
 The error coordinator's reads are debounced to at most once per ten minutes.
 
-Separately, the rate-limit error itself is now handled. It previously surfaced as raw tracebacks,
-and was partly treated as an authentication problem — triggering a pointless re-login, since a send
-quota has nothing to do with credentials. The device now degrades to offline cleanly.
+Upstream now turns a tripped quota into a readable "API limit exceeded" error, and commands a
+person is waiting on (manual movement, dock, blades, cancel) are allowed past the quota. This fork
+keeps that for those commands, but a background refresh that hits the quota degrades the device to
+offline quietly instead of raising an error out of the coordinator.
 
 **Note on firmware:** mowers running firmware **1.30.25.1 or newer** have migrated to a different
 Mammotion broker and have no send quota at all. On those, this change is simply inert. It matters
@@ -85,7 +86,15 @@ regular state does not tell you.
 Useful for automations along the lines of "if it stopped to charge mid-job, send it back out once
 charged". The entity is only created for Luba 1 hardware.
 
-Currently named "Job paused" in every language; translations for the other locales are not done yet.
+### 3. Area switches for deleted areas are removed
+
+When an area is deleted on the mower, its area switch could stay behind in Home Assistant, and
+starting a mow in it failed with "Invalid task area detected". The library keeps an area as long as
+its hash appears in *any* of the mower's hash lists, and area hashes also show up in the path list,
+so deleted areas survived every map sync.
+
+This fork checks area switches against the mower's own area list and removes the ones it no longer
+has. An empty area list is treated as a refresh in progress and never used to remove anything.
 
 ## Installation
 
@@ -128,20 +137,20 @@ actively maintained and is the better choice.
 This fork tracks `mikey0000/Mammotion-HA` and merges new upstream releases when I get to it. It is
 not a competing project and is not trying to become one.
 
-Neither change here has been proposed upstream. If you hit a bug, work out first whether it is in
+None of these changes has been proposed upstream. If you hit a bug, work out first whether it is in
 this fork's changes or in the integration generally — if it is the latter, upstream is the right
 place, and please report it there rather than here.
 
-Currently based on upstream `0.6.4-beta12`.
+Currently based on upstream `0.6.10-beta2`.
 
 ## Credits
 
 Essentially all of this code is written by [mikey0000](https://github.com/mikey0000) and the
 [contributors to Mammotion-HA](https://github.com/mikey0000/Mammotion-HA/graphs/contributors). This
-fork adds two changes on top of their work.
+fork adds a few changes on top of their work.
 
 The cloud send quota change originates from [jirkaorlik-hash](https://github.com/jirkaorlik-hash),
-and is used here unmodified.
+and has been adapted here to upstream's later changes.
 
 The integration communicates with mowers through the
 [PyMammotion](https://github.com/mikey0000/PyMammotion) library.

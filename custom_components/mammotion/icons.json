@@ -32,6 +32,9 @@
       },
       "clear_all_mapdata": {
         "default": "mdi:map-marker-remove"
+      },
+      "start_dropmow": {
+        "default": "mdi:mower-on"
       }
     },
     "sensor": {
@@ -79,6 +82,16 @@
       },
       "position_type": {
         "default": "mdi:land-plots-marker"
+      },
+      "self_check": {
+        "default": "mdi:alert-circle-outline",
+        "state": {
+          "normal": "mdi:check-circle-outline",
+          "rain": "mdi:weather-rainy",
+          "low_battery": "mdi:battery-alert",
+          "night_protection": "mdi:weather-night",
+          "non_working_hours": "mdi:clock-alert-outline"
+        }
       }
     },
     "select": {
@@ -153,6 +166,9 @@
       },
       "toward_included_angle": {
         "default": "mdi:angle-right"
+      },
+      "charge_limit": {
+        "default": "mdi:battery-charging-80"
       }
     },
     "switch": {
@@ -178,6 +194,12 @@
       "rain_tactics": {
         "default": "mdi:weather-rainy"
       },
+      "auto_change_direction": {
+        "default": "mdi:swap-horizontal-bold"
+      },
+      "smart_charge": {
+        "default": "mdi:battery-sync"
+      },
       "side_led": {
         "default": "mdi:led-off",
         "state": {
@@ -190,11 +212,36 @@
       },
       "schedule_updates": {
         "default": "mdi:update"
+      },
+      "manual_grass_collection": {
+        "default": "mdi:broom"
+      },
+      "manual_grass_dump": {
+        "default": "mdi:dump-truck"
       }
     },
     "update": {
       "update": {
         "default": "mdi:cellphone-arrow-down"
+      }
+    },
+    "event": {
+      "notification": {
+        "default": "mdi:bell-ring"
+      }
+    },
+    "binary_sensor": {
+      "rain_detected": {
+        "default": "mdi:weather-sunny",
+        "state": {
+          "on": "mdi:weather-rainy"
+        }
+      },
+      "job_paused": {
+        "default": "mdi:play-circle-outline",
+        "state": {
+          "on": "mdi:pause-circle-outline"
+        }
       }
     }
   }

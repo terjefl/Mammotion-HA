@@ -1,6 +1,6 @@
 [project]
 name = "mammotion-ha"
-version = "0.6.4-beta12"
+version = "0.6.10-beta2"
 description = "Mammotion integration for HACS"
 authors = [
     {name = "Michael Arthur", email = "michael@jumblesoft.co.nz"},
@@ -9,7 +9,7 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.14.2"
 dependencies = [
-    "pymammotion==0.8.13",
+    "pymammotion==0.9.6",
     "homeassistant>=2026.1.0",
     "autotyping>=24.3.0",
     "websockets>=15.0.1",
@@ -20,17 +20,24 @@ dependencies = [
 dev = [
     "pre-commit>=3.8.0",
     "pylint>=3.3.9",
-    "ruff>=0.14.3",
+    "ruff>=0.16.8",
     "mypy>=1.18.2",
     "pytest>=8.0.0",
+    "pytest-homeassistant-custom-component==0.13.366",
+    "aiousbwatcher>=1.1.2",
+    "serialx>=1.10.0",
+    "pyturbojpeg>=2.5.0",
 ]
 
 [tool.uv]
 package = false
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests_ha"]
 pythonpath = ["."]
+# pytest-homeassistant-custom-component ships autouse async fixtures, which
+# need asyncio auto mode the way Home Assistant core runs its own suite.
+asyncio_mode = "auto"
 
 [tool.mypy]
 python_version = "3.14"
@@ -344,6 +351,8 @@ max-line-length-suggestions = 72
 required-version = ">=0.4.3"
 
 [tool.ruff.lint]
+# So BLE001 and the logging rules recognise the integration's shared logger.
+logger-objects = ["custom_components.mammotion.const.LOGGER"]
 select = [
     "A001", # Variable {name} is shadowing a Python builtin
     "B002", # Python does not support the unary prefix increment
@@ -474,3 +483,9 @@ ignore = [
     "TRY002",
     "TRY301"
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# A test directory is a namespace package by design, and these tests drive the
+# integration's private helpers directly because that is where the behaviour
+# under test lives.
+"tests_ha/*" = ["INP001", "SLF001"]

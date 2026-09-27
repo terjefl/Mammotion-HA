@@ -9,8 +9,11 @@
       "no_longer_present": "Het apparaat is niet langer aanwezig",
       "not_supported": "Apparaat wordt niet ondersteund",
       "reconfigure_successful": "Opnieuw instellen gelukt",
+      "merged_into_existing_account": "This account already has an entry; the Bluetooth devices were merged into it and this entry was removed.",
       "api_limit_exceeded": "De API-limiet is overschreden. Probeer het later opnieuw.",
-      "account_in_use": "Uw Mammotion-account is al actief in een andere sessie. Log uit de Mammotion-app en probeer het opnieuw."
+      "account_in_use": "Uw Mammotion-account is al actief in een andere sessie. Log uit de Mammotion-app en probeer het opnieuw.",
+      "reauth_successful": "Opnieuw verifiëren is gelukt",
+      "wrong_account": "Deze inloggegevens horen bij een ander Mammotion-account. Verifieer opnieuw met het account waarmee dit item is ingesteld."
     },
     "error": {
       "login_failed": "Inloggen mislukt. Controleer het e-mailadres en wachtwoord van je account en probeer het opnieuw.",
@@ -20,33 +23,34 @@
     "flow_title": "{name}",
     "step": {
       "bluetooth_confirm": {
-        "description": "Configureer {name}",
-        "data": {
-          "stay_connected_bluetooth": "Houd Bluetooth verbonden"
-        }
+        "description": "Configureer {name}"
       },
       "reconfigure": {
         "data": {
-          "use_wifi": "Gebruik Wi-Fi",
           "account_name": "Mammotion e-mailadres of accountnummer",
           "password": "Mammotion account wachtwoord"
         }
       },
       "user": {
         "data": {
-          "address": "Apparaat",
-          "stay_connected_bluetooth": "Hou bluetooth verbonden"
+          "address": "Apparaat"
         },
         "description": "Kies uw maaimachines"
       },
       "wifi": {
         "data": {
-          "use_wifi": "Gebruik Wi-Fi (haal het vinkje weg en klik \"ga verder\" om Bluetooth te gebruiken)",
           "account_name": "Mammotion e-mailadres of accountnummer",
           "password": "Mammotion account wachtwoord"
         },
         "title": "Verbind met Wi-Fi",
-        "description": "Voer je Mammotion account e-mail of id en wachtwoord in"
+        "description": "Voer je Mammotion account e-mail of id en wachtwoord in. Laat beide velden leeg om alleen Bluetooth te gebruiken, zonder account."
+      },
+      "reauth_confirm": {
+        "title": "Mammotion opnieuw verifiëren",
+        "description": "De Mammotion-cloud heeft de opgeslagen inloggegevens voor {account} geweigerd. Voer je wachtwoord in om opnieuw in te loggen.",
+        "data": {
+          "password": "Wachtwoord Mammotion-account"
+        }
       }
     }
   },
@@ -55,11 +59,14 @@
       "init": {
         "data": {
           "title": "Configuratie bijwerken",
-          "stay_connected_bluetooth": "Houd Bluetooth verbonden",
           "prefer_ble_over_wifi": "Bluetooth verkiezen boven Wi-Fi indien beschikbaar",
           "movement_use_wifi": "Bewegingsopdrachten via Wi-Fi verzenden",
           "mow_path_fetch_enabled": "Maaipad ophalen inschakelen (cloud)",
-          "full_map_fetch_enabled": "Volledig kaart ophalen inschakelen (cloud) — wanneer uit worden alleen gebiednamen opgehaald"
+          "full_map_fetch_enabled": "Volledig kaart ophalen inschakelen (cloud) — wanneer uit worden alleen gebiednamen opgehaald",
+          "notify": "Toon blijvende meldingen voor"
+        },
+        "data_description": {
+          "notify": "Zelftestmeldingen staan standaard aan, de andere uit. Elke melding activeert ook de meldingsgebeurtenis-entiteit van de maaier en een mammotion_event op de bus, die automatiseringen in plaats daarvan kunnen gebruiken."
         }
       }
     }
@@ -285,7 +292,7 @@
         "name": "Reinigingsmodus",
         "state": {
           "UNKNOWN": "Onbekend",
-          "RECHARGE": "Opladen",
+          "OFF": "Uit",
           "AUTO": "Alles",
           "FLOOR": "Bodem",
           "WALL": "Wand",
@@ -348,6 +355,46 @@
           "2": "Zwak",
           "3": "Geen"
         }
+      },
+      "self_check": {
+        "name": "Zelftest",
+        "state": {
+          "normal": "OK",
+          "emergency_stop": "Noodstop geactiveerd",
+          "stop_button": "STOP-knop ingedrukt",
+          "safety_key_missing": "Veiligheidssleutel niet ingestoken",
+          "lifted": "Opgetild",
+          "tilted": "Gekanteld",
+          "tipped_over": "Omgevallen",
+          "bumper_missing": "Zijbumper niet gemonteerd",
+          "rain": "Regen gedetecteerd",
+          "low_battery": "Batterij bijna leeg",
+          "non_working_hours": "Buiten werktijden",
+          "rtk_station_moved": "RTK-referentiestation verplaatst",
+          "outside_task_area": "Buiten het taakgebied",
+          "wheel_motor_error": "Fout in wielnaafmotor",
+          "blade_motor_overheated": "Maaimesmotor te heet",
+          "dock_moved": "Laadstation verplaatst",
+          "no_task_area": "Geen taakgebied",
+          "night_protection": "Nachtbescherming",
+          "rtk_not_ready": "RTK-referentiestation niet gereed",
+          "weak_satellite_signal": "Zwak satellietsignaal",
+          "positioning_failure": "Storing in positioneringssysteem",
+          "inavi_unavailable": "iNavi-dienst niet beschikbaar",
+          "weak_rtk_signal": "Zwak RTK-signaal",
+          "other": "Overig"
+        }
+      }
+    },
+    "binary_sensor": {
+      "spino_charging": {
+        "name": "Opladen"
+      },
+      "rain_detected": {
+        "name": "Regen gedetecteerd"
+      },
+      "job_paused": {
+        "name": "Taak gepauzeerd"
       }
     },
     "button": {
@@ -362,6 +409,9 @@
       },
       "release_from_dock": {
         "name": "Laadstation uitrijden"
+      },
+      "start_dropmow": {
+        "name": "DropMow starten"
       },
       "emergency_nudge_forward": {
         "name": "Nood Duwtje vooruit"
@@ -386,6 +436,9 @@
       },
       "restart_mower": {
         "name": "Maaier herstarten"
+      },
+      "refresh_status": {
+        "name": "Status vernieuwen"
       },
       "spino_fetch_map": {
         "name": "Zwembadkaart ophalen"
@@ -416,8 +469,14 @@
       "rain_tactics": {
         "name": "Regendetectie (tijdens maaien) aan/uit"
       },
+      "auto_change_direction": {
+        "name": "Maairichting automatisch omkeren"
+      },
       "rain_detection": {
         "name": "Regen­detectie (maaier) aan/uit"
+      },
+      "smart_charge": {
+        "name": "Slim opladen"
       },
       "side_led": {
         "name": "Zijkant LED's aan/uit"
@@ -443,6 +502,12 @@
       "voice_on_off": {
         "name": "Stem aan/uit"
       },
+      "manual_grass_collection": {
+        "name": "Handmatig gras opvangen"
+      },
+      "manual_grass_dump": {
+        "name": "Handmatig gras legen"
+      },
       "spino_buzzer": {
         "name": "Zoemer"
       },
@@ -453,7 +518,7 @@
         "name": "Platformreiniging"
       },
       "spino_waterline_parking": {
-        "name": "Parkeren bij de waterlijn"
+        "name": "Parkeren bij waterlijn"
       }
     },
     "select": {
@@ -496,10 +561,10 @@
       "bypass_mode": {
         "name": "Obstakeldetectie",
         "state": {
-          "direct_touch": "Uit",
-          "slow_touch": "Langzame aanraking",
+          "off": "Uit",
+          "slow_touch": "Basis",
           "less_touch": "Minder aanraking",
-          "no_touch": "Standaard",
+          "standard": "Standaard",
           "sensitive": "Gevoelig"
         }
       },
@@ -552,7 +617,7 @@
         "name": "Reinigingsmodus",
         "state": {
           "UNKNOWN": "Onbekend",
-          "RECHARGE": "Opladen",
+          "OFF": "Uit",
           "AUTO": "Alles",
           "FLOOR": "Bodem",
           "WALL": "Wand",
@@ -565,7 +630,7 @@
         "name": "Wandmateriaal",
         "state": {
           "GLASS": "Glas",
-          "CERAMICS": "Tegels",
+          "CERAMICS": "Tegel",
           "SAND_STONE": "Aggregaat",
           "VINYL": "Vinyl"
         }
@@ -583,6 +648,9 @@
     "number": {
       "voice_volume": {
         "name": "Stemvolume"
+      },
+      "charge_limit": {
+        "name": "Laadlimiet"
       },
       "start_progress": {
         "name": "Start voortgang"
@@ -617,6 +685,24 @@
     },
     "device_tracker": {
       "name": "Apparaat volgen"
+    },
+    "event": {
+      "notification": {
+        "name": "Meldingen",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "device_notification_event": "Melding",
+              "device_information_event": "Informatie",
+              "device_warning_code_event": "Waarschuwingscodes",
+              "device_warning_event": "Waarschuwing",
+              "device_biz_req_event": "Bedrijfsverzoek",
+              "device_log_progress_event": "Voortgang logupload",
+              "device_config_req_event": "Configuratieverzoek"
+            }
+          }
+        }
+      }
     }
   },
   "selector": {
@@ -628,10 +714,10 @@
     },
     "ultra_wave": {
       "options": {
-        "0": "Directe aanraking",
-        "1": "Langzame aanraking",
+        "0": "Uit",
+        "1": "Basis",
         "2": "Minder aanraking",
-        "10": "Zonder aanraking",
+        "10": "Standaard",
         "11": "Gevoelig"
       }
     },
@@ -672,6 +758,13 @@
         "2": "Twee ronden",
         "3": "Drie ronden",
         "4": "Vier ronden"
+      }
+    },
+    "notify": {
+      "options": {
+        "warnings": "Waarschuwingen en foutcodes",
+        "notifications": "Apparaatmeldingen en informatie",
+        "self_check": "Zelftest: waarom de maaier niet kan starten"
       }
     }
   },
@@ -774,6 +867,48 @@
         }
       }
     },
+    "modify_running_job": {
+      "name": "Lopende taak wijzigen",
+      "description": "Wijzigt instellingen van de taak die de maaier al uitvoert, zonder deze opnieuw te starten. Alleen beschikbaar op Luba 2 en nieuwer tijdens een lopende taak.",
+      "fields": {
+        "blade_height": {
+          "name": "Meshoogte",
+          "description": "Meshoogte"
+        },
+        "speed": {
+          "name": "Werksnelheid",
+          "description": "Werksnelheid"
+        },
+        "ultra_wave": {
+          "name": "Obstakeldetectie",
+          "description": "Obstakeldetectie"
+        },
+        "channel_width": {
+          "name": "Baanafstand",
+          "description": "Baanafstand"
+        },
+        "channel_mode": {
+          "name": "Routemodus",
+          "description": "Routemodus"
+        },
+        "obstacle_laps": {
+          "name": "Rondes verboden zone",
+          "description": "Rondes verboden zone"
+        },
+        "rain_tactics": {
+          "name": "Regenstrategie",
+          "description": "Regenstrategie"
+        },
+        "auto_change_direction": {
+          "name": "Richting automatisch wisselen",
+          "description": "Richting automatisch wisselen"
+        },
+        "start_progress": {
+          "name": "Voortgang",
+          "description": "Voortgang"
+        }
+      }
+    },
     "start_stop_blades": {
       "name": "Start of stop de messen",
       "description": "Start of stop de messen handmatig.",
@@ -812,28 +947,48 @@
         }
       }
     },
+    "set_blade_height": {
+      "name": "Meshoogte instellen",
+      "description": "Stuurt een meshoogte rechtstreeks naar de maaimotor van de maaier.",
+      "fields": {
+        "height": {
+          "name": "Hoogte",
+          "description": "Meshoogte in millimeters."
+        }
+      }
+    },
     "reset_blade_time": {
       "name": "Mestijd resetten",
       "description": "Reset de teller voor de gebruikstijd van het mes."
     },
+    "start_dump_point_setup": {
+      "name": "Instellen van stortpunten starten",
+      "description": "Zet de maaier in de instelmodus voor stortpunten, zodat punten kunnen worden vastgelegd."
+    },
+    "add_dump_point": {
+      "name": "Stortpunt toevoegen",
+      "description": "Legt een stortpunt vast op de huidige positie van de maaier."
+    },
+    "undo_dump_point": {
+      "name": "Laatste stortpunt ongedaan maken",
+      "description": "Verwijdert het laatst vastgelegde stortpunt."
+    },
+    "finish_dump_point_setup": {
+      "name": "Instellen van stortpunten voltooien",
+      "description": "Slaat de vastgelegde stortpunten op en verlaat de instelmodus."
+    },
+    "finish_outside_dump_point": {
+      "name": "Stortpunt buiten gebied voltooien",
+      "description": "Rondt het instellen af van een stortpunt dat buiten het maaigebied is vastgelegd."
+    },
     "get_map_data": {
       "name": "Kaartgegevens ophalen",
-      "description": "Geeft de ruwe kaartgegevens terug (gebieden, SVG-tegels, gebiednamen) voor gebruik met de SVG-kaartkaart.",
-      "fields": {
-        "entity_id": {
-          "name": "Entiteit",
-          "description": "Elke Mammotion-entiteit die bij het apparaat hoort."
-        }
-      }
+      "description": "Geeft de ruwe kaartgegevens terug (gebieden, SVG-tegels, gebiednamen) voor gebruik met de SVG-kaartkaart."
     },
     "svg_add": {
       "name": "SVG-tegel toevoegen",
       "description": "Stuurt een nieuwe SVG-tegel naar de apparaatkaart. Geeft de door het apparaat toegewezen hash terug.",
       "fields": {
-        "entity_id": {
-          "name": "Entiteit",
-          "description": "Elke Mammotion-entiteit die bij het apparaat hoort."
-        },
         "area_hash": {
           "name": "Gebiedshash",
           "description": "Hash van het bovenliggende maaigebied."
@@ -876,10 +1031,6 @@
       "name": "SVG-tegel bijwerken",
       "description": "Vervangt een bestaande SVG-tegel op de apparaatkaart. Gebruik de device_hash die door svg_add is geretourneerd.",
       "fields": {
-        "entity_id": {
-          "name": "Entiteit",
-          "description": "Elke Mammotion-entiteit die bij het apparaat hoort."
-        },
         "device_hash": {
           "name": "Apparaathash",
           "description": "Hash toegewezen door het apparaat toen de tegel voor het eerst werd toegevoegd."
@@ -926,10 +1077,6 @@
       "name": "SVG-tegel verwijderen",
       "description": "Verwijdert een SVG-tegel van de apparaatkaart via de door het apparaat toegewezen hash.",
       "fields": {
-        "entity_id": {
-          "name": "Entiteit",
-          "description": "Elke Mammotion-entiteit die bij het apparaat hoort."
-        },
         "device_hash": {
           "name": "Apparaathash",
           "description": "Hash toegewezen door het apparaat toen de tegel werd toegevoegd."
@@ -1142,9 +1289,95 @@
       "name": "Taken vernieuwen",
       "description": "Haalt alle schema's opnieuw op van het apparaat."
     },
+    "get_tasks": {
+      "name": "Taken ophalen",
+      "description": "Geeft alle schema's terug die de integratie voor het geselecteerde apparaat bijhoudt, inclusief of elk schema is ingeschakeld. Gebruik dit om te bevestigen dat een wijziging is doorgevoerd; 'Taken vernieuwen' haalt ze eerst opnieuw op van het apparaat."
+    },
     "start_task": {
       "name": "Taak starten",
       "description": "Voert een opgeslagen schema direct uit (ook bekend als 'schema starten'). Alleen maaier — de Spino zwembadrobot heeft geen equivalent commando."
+    },
+    "backup_map": {
+      "name": "Kaart back-uppen",
+      "description": "Uploadt de kaart van de maaier naar je Mammotion-cloudaccount. Geeft de back-up-ID terug. Geef een bestaande back-up-ID op om die back-up te overschrijven in plaats van een nieuwe te maken.",
+      "fields": {
+        "name": {
+          "name": "Naam",
+          "description": "Naam van de back-up."
+        },
+        "backup_id": {
+          "name": "Back-up-ID",
+          "description": "Bestaande back-up om te overschrijven. Laat leeg om een nieuwe back-up te maken."
+        }
+      }
+    },
+    "restore_map": {
+      "name": "Kaart herstellen",
+      "description": "Vervangt de huidige kaart van de maaier door een back-up van het Mammotion-account waarmee deze integratie is aangemeld. De maaier herstart zodra het herstel klaar is.",
+      "fields": {
+        "backup_id": {
+          "name": "Back-up-ID",
+          "description": "Te herstellen back-up, zoals teruggegeven door 'Kaartback-ups ophalen'."
+        }
+      }
+    },
+    "get_map_backups": {
+      "name": "Kaartback-ups ophalen",
+      "description": "Geeft de kaartback-ups van het Mammotion-account waarmee deze integratie is aangemeld. Back-ups horen bij een account, dus back-ups die in de app onder een ander account zijn gemaakt, worden niet getoond."
+    },
+    "get_geojson": {
+      "name": "Kaart-GeoJSON ophalen",
+      "description": "Geeft de kaart van de maaier (gebieden, obstakels, paden, laadstation en RTK-station) terug als GeoJSON FeatureCollection voor de kaartkaart en laat de maaier de komende minuten zijn positie doorgeven."
+    },
+    "get_mow_path_geojson": {
+      "name": "Maaipad-GeoJSON ophalen",
+      "description": "Geeft het geplande maaipad van de huidige taak terug als GeoJSON FeatureCollection. Leeg totdat het pad is opgehaald."
+    },
+    "get_mow_progress_geojson": {
+      "name": "Maaivoortgang-GeoJSON ophalen",
+      "description": "Geeft het al gemaaide deel van het maaipad van de huidige taak terug als GeoJSON FeatureCollection; maaiers met een dynamische lijn geven in plaats daarvan die lijn terug. Loopt er een taak en is er nog niets te tonen, dan haalt het ook de gegevens van deze laag op, hooguit eens per minuut. Via Bluetooth houdt een dynamische lijn zichzelf bij."
+    },
+    "fetch_mow_path": {
+      "name": "Maaipad ophalen",
+      "description": "Haalt het maaipad op van de taak die de maaier uitvoert, tenzij er al een volledig pad in de cache staat, en berekent daaruit de maaivoortgang opnieuw. Maaiers met een dynamische lijn halen ook hun nieuwste lijn op. Via de cloud gebeurt dit alleen als 'Maaipad ophalen inschakelen (cloud)' in de opties is ingeschakeld; via Bluetooth altijd. Geeft terug of het ophalen is gestart."
+    },
+    "get_map_backup_progress": {
+      "name": "Voortgang kaartback-up ophalen",
+      "description": "Geeft terug hoe ver een back-up of herstel van de kaart is.",
+      "fields": {
+        "backup_id": {
+          "name": "Back-up-ID",
+          "description": "Back-up waarvan de taak gecontroleerd moet worden."
+        },
+        "restore": {
+          "name": "Herstel",
+          "description": "Een herstel controleren in plaats van een back-up."
+        }
+      }
+    },
+    "cancel_map_backup": {
+      "name": "Kaartback-up annuleren",
+      "description": "Annuleert een lopende back-up of herstel van de kaart.",
+      "fields": {
+        "backup_id": {
+          "name": "Back-up-ID",
+          "description": "Back-up waarvan de taak geannuleerd moet worden."
+        },
+        "restore": {
+          "name": "Herstel",
+          "description": "Een herstel annuleren in plaats van een back-up."
+        }
+      }
+    },
+    "delete_map_backup": {
+      "name": "Kaartback-up verwijderen",
+      "description": "Verwijdert een kaartback-up uit de Mammotion-cloud.",
+      "fields": {
+        "backup_id": {
+          "name": "Back-up-ID",
+          "description": "Te verwijderen back-up."
+        }
+      }
     }
   },
   "exceptions": {
@@ -1183,6 +1416,102 @@
     },
     "start_task_unsupported_on_spino": {
       "message": "Een schema op aanvraag starten wordt niet ondersteund op de Spino zwembadrobot — de firmware heeft geen 'nu uitvoeren' commando voor opgeslagen schema's."
+    },
+    "grass_collection_unsupported": {
+      "message": "Deze maaier ondersteunt het opvangen van gras niet."
+    },
+    "map_backup_cloud_unavailable": {
+      "message": "Kaartback-ups vereisen een werkende aanmelding bij de Mammotion-cloud."
+    },
+    "map_backup_failed": {
+      "message": "De Mammotion-cloud heeft het verzoek voor de kaartback-up geweigerd: {reason}"
+    },
+    "map_backup_device_not_found": {
+      "message": "{device_name} staat in dit Mammotion-account niet vermeld voor kaartback-ups."
+    },
+    "mower_not_found": {
+      "message": "{entity_id} is geen Mammotion-maaier."
+    },
+    "notification_unknown_code": {
+      "message": "Onbekende foutcode {code}"
+    },
+    "notification_title_warnings": {
+      "message": "{device_name}: waarschuwingen"
+    },
+    "notification_title_notifications": {
+      "message": "{device_name}: meldingen"
+    },
+    "notification_title_self_check": {
+      "message": "{device_name}: {state}"
+    },
+    "self_check_emergency_stop": {
+      "message": "De noodstop is actief. Ontgrendel hem op de maaier voordat je opnieuw start."
+    },
+    "self_check_stop_button": {
+      "message": "De STOP-knop op de maaier is ingedrukt. Reset hem op de maaier voordat je opnieuw start."
+    },
+    "self_check_safety_key_missing": {
+      "message": "De veiligheidssleutel is niet ingestoken. Steek hem in om te beginnen met maaien."
+    },
+    "self_check_lifted": {
+      "message": "De maaier is van de grond getild. Zet hem terug op het gazon."
+    },
+    "self_check_tilted": {
+      "message": "De maaier staat scheef. Zet hem op vlakke grond."
+    },
+    "self_check_tipped_over": {
+      "message": "De maaier is omgevallen. Zet hem weer rechtop."
+    },
+    "self_check_bumper_missing": {
+      "message": "De zijbumper is niet gemonteerd. Monteer hem voor het maaien."
+    },
+    "self_check_rain": {
+      "message": "Er is regen gedetecteerd en 'Niet maaien op regenachtige dagen' staat aan. Maaien kan starten zodra het droog is, of zet de functie uit."
+    },
+    "self_check_low_battery": {
+      "message": "De batterij is te leeg om te maaien. Laat de maaier opladen."
+    },
+    "self_check_non_working_hours": {
+      "message": "Het is buiten de werktijden van de maaier."
+    },
+    "self_check_rtk_station_moved": {
+      "message": "Het RTK-referentiestation is verplaatst. Controleer de positie in de app."
+    },
+    "self_check_outside_task_area": {
+      "message": "De maaier staat buiten zijn taakgebied. Zet hem terug in een gekarteerd gebied."
+    },
+    "self_check_wheel_motor_error": {
+      "message": "Een wielnaafmotor heeft een fout gemeld."
+    },
+    "self_check_blade_motor_overheated": {
+      "message": "De maaimesmotor is te heet. Laat hem afkoelen."
+    },
+    "self_check_dock_moved": {
+      "message": "Het laadstation is verplaatst. Controleer de positie in de app."
+    },
+    "self_check_no_task_area": {
+      "message": "Er is geen taakgebied gevonden. Maak een kaart in de app."
+    },
+    "self_check_night_protection": {
+      "message": "Nachtbescherming staat aan, dus de maaier maait 's nachts niet."
+    },
+    "self_check_rtk_not_ready": {
+      "message": "Het RTK-referentiestation is nog niet gereed."
+    },
+    "self_check_weak_satellite_signal": {
+      "message": "Het satellietsignaal van de maaier is te zwak om hem te lokaliseren."
+    },
+    "self_check_positioning_failure": {
+      "message": "Het positioneringssysteem is uitgevallen."
+    },
+    "self_check_inavi_unavailable": {
+      "message": "De iNavi-dienst is niet beschikbaar."
+    },
+    "self_check_weak_rtk_signal": {
+      "message": "Het RTK-signaal is zwak. Controleer waar het referentiestation staat."
+    },
+    "self_check_other": {
+      "message": "De maaier meldde een onbekende zelftestcode {code}."
     }
   }
 }

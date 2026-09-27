@@ -9,8 +9,11 @@
       "no_longer_present": "Enheden er ikke længere til stede",
       "not_supported": "Enheden understøttes ikke",
       "reconfigure_successful": "Omkonfiguration lykkedes",
+      "merged_into_existing_account": "This account already has an entry; the Bluetooth devices were merged into it and this entry was removed.",
       "api_limit_exceeded": "API-anmodningsgrænsen er overskredet. Prøv igen senere.",
-      "account_in_use": "Din Mammotion-konto er allerede aktiv i en anden session. Log ud af Mammotion-appen og prøv igen."
+      "account_in_use": "Din Mammotion-konto er allerede aktiv i en anden session. Log ud af Mammotion-appen og prøv igen.",
+      "reauth_successful": "Godkendelsen blev fornyet",
+      "wrong_account": "Disse legitimationsoplysninger tilhører en anden Mammotion-konto. Godkend igen med den konto, denne post blev oprettet med."
     },
     "error": {
       "login_failed": "Login mislykkedes. Kontrollér din kontos e-mail og adgangskode, og prøv igen.",
@@ -20,33 +23,34 @@
     "flow_title": "{name}",
     "step": {
       "bluetooth_confirm": {
-        "description": "Opsætning af {name}",
-        "data": {
-          "stay_connected_bluetooth": "Hold Bluetooth-forbindelsen"
-        }
+        "description": "Opsætning af {name}"
       },
       "reconfigure": {
         "data": {
-          "use_wifi": "Brug Wi-fi",
           "account_name": "Mammotion e-mail eller kontonummer",
           "password": "Mammotion adgangskode"
         }
       },
       "user": {
         "data": {
-          "address": "Enhed",
-          "stay_connected_bluetooth": "Hold Bluetooth-forbindelsen"
+          "address": "Enhed"
         },
         "description": "Vælg din plæneklipper"
       },
       "wifi": {
         "data": {
-          "use_wifi": "Brug Wi-Fi (fjern markeringen, for at bruge Bluetooth)",
           "account_name": "Mammotion e-mail eller kontonummer",
           "password": "Mammotion adgangskode"
         },
         "title": "Opret forbindelse til Wi-Fi",
-        "description": "Indtast din Mammotion e-mail eller -id og adgangskode"
+        "description": "Indtast din Mammotion e-mail eller -id og adgangskode. Lad begge felter være tomme for kun at bruge Bluetooth uden en konto."
+      },
+      "reauth_confirm": {
+        "title": "Forny Mammotion-godkendelse",
+        "description": "Mammotion-skyen afviste de gemte legitimationsoplysninger for {account}. Indtast din adgangskode for at logge ind igen.",
+        "data": {
+          "password": "Adgangskode til Mammotion-konto"
+        }
       }
     }
   },
@@ -55,11 +59,14 @@
       "init": {
         "data": {
           "title": "Opdater konfiguration",
-          "stay_connected_bluetooth": "Hold Bluetooth-forbindelsen",
           "prefer_ble_over_wifi": "Foretræk Bluetooth frem for Wi-Fi, når det er tilgængeligt",
           "movement_use_wifi": "Send bevægelseskommandoer via Wi-Fi",
           "mow_path_fetch_enabled": "Aktivér hentning af klippesti (sky)",
-          "full_map_fetch_enabled": "Aktivér fuld korthentning (sky) — når slået fra, hentes kun områdenavne"
+          "full_map_fetch_enabled": "Aktivér fuld korthentning (sky) — når slået fra, hentes kun områdenavne",
+          "notify": "Vis vedvarende notifikationer for"
+        },
+        "data_description": {
+          "notify": "Selvtestmeddelelser er slået til som standard; de andre er slået fra. Hver meddelelse udløser også plæneklipperens meddelelseshændelsesenhed og en mammotion_event-hændelse på bussen, som automatiseringer kan bruge i stedet."
         }
       }
     }
@@ -270,8 +277,8 @@
         "name": "Status",
         "state": {
           "UNKNOWN": "Ukendt",
-          "IDLE": "Standby",
-          "PREPARE": "Standby",
+          "IDLE": "På venten",
+          "PREPARE": "På venten",
           "WAIT_WATER": "Fylder med vand",
           "WORKING": "Arbejder",
           "PAUSE_GO_CHARGE": "Vender tilbage til opladning (pause)",
@@ -285,7 +292,7 @@
         "name": "Rengøringstilstand",
         "state": {
           "UNKNOWN": "Ukendt",
-          "RECHARGE": "Genoplad",
+          "OFF": "Fra",
           "AUTO": "Alle",
           "FLOOR": "Bund",
           "WALL": "Væg",
@@ -348,6 +355,46 @@
           "2": "Svag",
           "3": "Ingen"
         }
+      },
+      "self_check": {
+        "name": "Selvtest",
+        "state": {
+          "normal": "OK",
+          "emergency_stop": "Nødstop aktiveret",
+          "stop_button": "STOP-knap trykket",
+          "safety_key_missing": "Sikkerhedsnøgle ikke isat",
+          "lifted": "Løftet",
+          "tilted": "Vippet",
+          "tipped_over": "Væltet",
+          "bumper_missing": "Sidekofanger ikke monteret",
+          "rain": "Regn registreret",
+          "low_battery": "Lavt batteri",
+          "non_working_hours": "Uden for arbejdstid",
+          "rtk_station_moved": "RTK-referencestation flyttet",
+          "outside_task_area": "Uden for opgaveområdet",
+          "wheel_motor_error": "Fejl i hjulnavsmotor",
+          "blade_motor_overheated": "Knivmotor for varm",
+          "dock_moved": "Ladestation flyttet",
+          "no_task_area": "Intet opgaveområde",
+          "night_protection": "Natbeskyttelse",
+          "rtk_not_ready": "RTK-referencestation ikke klar",
+          "weak_satellite_signal": "Svagt satellitsignal",
+          "positioning_failure": "Fejl i positioneringssystem",
+          "inavi_unavailable": "iNavi-tjeneste utilgængelig",
+          "weak_rtk_signal": "Svagt RTK-signal",
+          "other": "Andet"
+        }
+      }
+    },
+    "binary_sensor": {
+      "spino_charging": {
+        "name": "Oplader"
+      },
+      "rain_detected": {
+        "name": "Regn registreret"
+      },
+      "job_paused": {
+        "name": "Opgave sat på pause"
       }
     },
     "button": {
@@ -362,6 +409,9 @@
       },
       "release_from_dock": {
         "name": "Fradokke"
+      },
+      "start_dropmow": {
+        "name": "Start DropMow"
       },
       "emergency_nudge_forward": {
         "name": "Nødskub fremad"
@@ -386,6 +436,9 @@
       },
       "restart_mower": {
         "name": "Genstart plæneklipperen"
+      },
+      "refresh_status": {
+        "name": "Opdater status"
       },
       "spino_fetch_map": {
         "name": "Hent poolkort"
@@ -416,8 +469,14 @@
       "rain_tactics": {
         "name": "Regn detektion (under arbejde) On/Off"
       },
+      "auto_change_direction": {
+        "name": "Automatisk vending af klipperetning"
+      },
       "rain_detection": {
         "name": "Regn detektering (Plæneklipper) Til/Fra"
+      },
+      "smart_charge": {
+        "name": "Smart opladning"
       },
       "side_led": {
         "name": "Side LED til/fra"
@@ -443,6 +502,12 @@
       "voice_on_off": {
         "name": "Stemme til/fra"
       },
+      "manual_grass_collection": {
+        "name": "Manuel græsopsamling"
+      },
+      "manual_grass_dump": {
+        "name": "Manuel græstømning"
+      },
       "spino_buzzer": {
         "name": "Summer"
       },
@@ -450,10 +515,10 @@
         "name": "Turbo-rengøring"
       },
       "spino_platform_cleaning": {
-        "name": "Platformsrengøring"
+        "name": "Platformrengøring"
       },
       "spino_waterline_parking": {
-        "name": "Parkering ved vandlinjen"
+        "name": "Vandlinjeparkering"
       }
     },
     "select": {
@@ -496,10 +561,10 @@
       "bypass_mode": {
         "name": "Forhindringsdetektion",
         "state": {
-          "direct_touch": "Fra",
-          "slow_touch": "Langsom berøring",
+          "off": "Fra",
+          "slow_touch": "Grundlæggende",
           "less_touch": "Mindre berøring",
-          "no_touch": "Standard",
+          "standard": "Standard",
           "sensitive": "Følsom"
         }
       },
@@ -552,7 +617,7 @@
         "name": "Rengøringstilstand",
         "state": {
           "UNKNOWN": "Ukendt",
-          "RECHARGE": "Genoplad",
+          "OFF": "Fra",
           "AUTO": "Alle",
           "FLOOR": "Bund",
           "WALL": "Væg",
@@ -565,8 +630,8 @@
         "name": "Vægmateriale",
         "state": {
           "GLASS": "Glas",
-          "CERAMICS": "Fliser",
-          "SAND_STONE": "Stenbelægning",
+          "CERAMICS": "Flise",
+          "SAND_STONE": "Aggregat",
           "VINYL": "Vinyl"
         }
       },
@@ -583,6 +648,9 @@
     "number": {
       "voice_volume": {
         "name": "Stemmestyrke"
+      },
+      "charge_limit": {
+        "name": "Opladningsgrænse"
       },
       "start_progress": {
         "name": "Start forløb på"
@@ -617,6 +685,24 @@
     },
     "device_tracker": {
       "name": "Enhedssporing"
+    },
+    "event": {
+      "notification": {
+        "name": "Notifikationer",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "device_notification_event": "Notifikation",
+              "device_information_event": "Information",
+              "device_warning_code_event": "Advarselskoder",
+              "device_warning_event": "Advarsel",
+              "device_biz_req_event": "Forretningsanmodning",
+              "device_log_progress_event": "Fremgang for logupload",
+              "device_config_req_event": "Konfigurationsanmodning"
+            }
+          }
+        }
+      }
     }
   },
   "selector": {
@@ -628,10 +714,10 @@
     },
     "ultra_wave": {
       "options": {
-        "0": "Direkte berøring",
-        "1": "Langsom berøring",
+        "0": "Fra",
+        "1": "Grundlæggende",
         "2": "Mindre berøring",
-        "10": "Ingen berøring",
+        "10": "Standard",
         "11": "Følsom"
       }
     },
@@ -672,6 +758,13 @@
         "2": "To omgange",
         "3": "Tre omgange",
         "4": "Fire omgange"
+      }
+    },
+    "notify": {
+      "options": {
+        "warnings": "Advarsler og fejlkoder",
+        "notifications": "Enhedsnotifikationer og information",
+        "self_check": "Selvtest: hvorfor plæneklipperen ikke kan starte"
       }
     }
   },
@@ -774,6 +867,48 @@
         }
       }
     },
+    "modify_running_job": {
+      "name": "Rediger igangværende opgave",
+      "description": "Ændrer indstillinger for den opgave, robotten allerede udfører, uden at genstarte den. Kun tilgængelig på Luba 2 og nyere under en igangværende opgave.",
+      "fields": {
+        "blade_height": {
+          "name": "Knivhøjde",
+          "description": "Knivhøjde"
+        },
+        "speed": {
+          "name": "Arbejdshastighed",
+          "description": "Arbejdshastighed"
+        },
+        "ultra_wave": {
+          "name": "Forhindringsregistrering",
+          "description": "Forhindringsregistrering"
+        },
+        "channel_width": {
+          "name": "Baneafstand",
+          "description": "Baneafstand"
+        },
+        "channel_mode": {
+          "name": "Rutetilstand",
+          "description": "Rutetilstand"
+        },
+        "obstacle_laps": {
+          "name": "Omgange i forbudt zone",
+          "description": "Omgange i forbudt zone"
+        },
+        "rain_tactics": {
+          "name": "Regntaktik",
+          "description": "Regntaktik"
+        },
+        "auto_change_direction": {
+          "name": "Automatisk retningsskift",
+          "description": "Automatisk retningsskift"
+        },
+        "start_progress": {
+          "name": "Forløb",
+          "description": "Forløb"
+        }
+      }
+    },
     "start_stop_blades": {
       "name": "Start eller stop blade",
       "description": "Start eller stop blade manuelt.",
@@ -812,28 +947,48 @@
         }
       }
     },
+    "set_blade_height": {
+      "name": "Indstil knivhøjde",
+      "description": "Sender en knivhøjde direkte til plæneklipperens knivmotor.",
+      "fields": {
+        "height": {
+          "name": "Højde",
+          "description": "Knivhøjde i millimeter."
+        }
+      }
+    },
     "reset_blade_time": {
       "name": "Nulstil klingetid",
       "description": "Nulstil tælleren for klingebrug."
     },
+    "start_dump_point_setup": {
+      "name": "Start opsætning af tømmepunkter",
+      "description": "Sætter plæneklipperen i opsætningstilstand for tømmepunkter, så punkter kan registreres."
+    },
+    "add_dump_point": {
+      "name": "Tilføj tømmepunkt",
+      "description": "Registrerer et tømmepunkt til græs på plæneklipperens aktuelle position."
+    },
+    "undo_dump_point": {
+      "name": "Fortryd sidste tømmepunkt",
+      "description": "Kasserer det senest registrerede tømmepunkt."
+    },
+    "finish_dump_point_setup": {
+      "name": "Afslut opsætning af tømmepunkter",
+      "description": "Gemmer de registrerede tømmepunkter og forlader opsætningstilstanden."
+    },
+    "finish_outside_dump_point": {
+      "name": "Afslut tømmepunkt uden for området",
+      "description": "Afslutter opsætningen af et tømmepunkt, der er registreret uden for klippeområdet."
+    },
     "get_map_data": {
       "name": "Hent kortdata",
-      "description": "Returnerer de rå kortdata (områder, SVG-fliser, områdenavne) til brug med SVG-kortkortet.",
-      "fields": {
-        "entity_id": {
-          "name": "Enhed",
-          "description": "En hvilken som helst Mammotion-enhed tilhørende enheden."
-        }
-      }
+      "description": "Returnerer de rå kortdata (områder, SVG-fliser, områdenavne) til brug med SVG-kortkortet."
     },
     "svg_add": {
       "name": "Tilføj SVG-flise",
       "description": "Sender en ny SVG-flise til enhedskortet. Returnerer den enhedstildelte hash.",
       "fields": {
-        "entity_id": {
-          "name": "Enhed",
-          "description": "En hvilken som helst Mammotion-enhed tilhørende enheden."
-        },
         "area_hash": {
           "name": "Områdehash",
           "description": "Hash for det overordnede klippeområde."
@@ -876,10 +1031,6 @@
       "name": "Opdater SVG-flise",
       "description": "Erstatter en eksisterende SVG-flise på enhedskortet. Brug device_hash returneret af svg_add.",
       "fields": {
-        "entity_id": {
-          "name": "Enhed",
-          "description": "En hvilken som helst Mammotion-enhed tilhørende enheden."
-        },
         "device_hash": {
           "name": "Enhedshash",
           "description": "Hash tildelt af enheden, da flisen første gang blev tilføjet."
@@ -926,10 +1077,6 @@
       "name": "Slet SVG-flise",
       "description": "Fjerner en SVG-flise fra enhedskortet via dens enhedstildelte hash.",
       "fields": {
-        "entity_id": {
-          "name": "Enhed",
-          "description": "En hvilken som helst Mammotion-enhed tilhørende enheden."
-        },
         "device_hash": {
           "name": "Enhedshash",
           "description": "Hash tildelt af enheden, da flisen blev tilføjet."
@@ -1142,9 +1289,95 @@
       "name": "Opdatér opgaver",
       "description": "Henter alle planer fra enheden igen."
     },
+    "get_tasks": {
+      "name": "Hent opgaver",
+      "description": "Returnerer alle planer, som integrationen har for den valgte enhed, inklusive om hver enkelt er aktiveret. Brug den til at bekræfte, at en ændring blev gennemført; „Opdater opgaver“ henter dem først fra enheden igen."
+    },
     "start_task": {
       "name": "Start opgave",
       "description": "Kører en gemt plan med det samme (også kendt som 'start plan'). Kun til plæneklipper — Spino-poolrobotten har ikke en tilsvarende kommando."
+    },
+    "backup_map": {
+      "name": "Sikkerhedskopiér kort",
+      "description": "Uploader plæneklipperens kort til din Mammotion-cloudkonto. Returnerer sikkerhedskopiens ID. Angiv et eksisterende sikkerhedskopi-ID for at overskrive den i stedet for at oprette en ny.",
+      "fields": {
+        "name": {
+          "name": "Navn",
+          "description": "Navn på sikkerhedskopien."
+        },
+        "backup_id": {
+          "name": "Sikkerhedskopi-ID",
+          "description": "Eksisterende sikkerhedskopi, der skal overskrives. Lad feltet være tomt for at oprette en ny."
+        }
+      }
+    },
+    "restore_map": {
+      "name": "Gendan kort",
+      "description": "Erstatter plæneklipperens nuværende kort med en sikkerhedskopi fra den Mammotion-konto, som denne integration er logget ind med. Plæneklipperen genstarter, når gendannelsen er færdig.",
+      "fields": {
+        "backup_id": {
+          "name": "Sikkerhedskopi-ID",
+          "description": "Sikkerhedskopi, der skal gendannes, som returneret af 'Hent kortsikkerhedskopier'."
+        }
+      }
+    },
+    "get_map_backups": {
+      "name": "Hent kortsikkerhedskopier",
+      "description": "Returnerer kortsikkerhedskopierne på den Mammotion-konto, som denne integration er logget ind med. Sikkerhedskopier hører til kontoen, så dem, der er lavet i appen med en anden konto, vises ikke."
+    },
+    "get_geojson": {
+      "name": "Hent kort-GeoJSON",
+      "description": "Returnerer plæneklipperens kort (områder, forhindringer, stier, ladestation og RTK-station) som en GeoJSON FeatureCollection til kortkortet og holder plæneklipperen i gang med at rapportere sin position de næste par minutter."
+    },
+    "get_mow_path_geojson": {
+      "name": "Hent klippesti-GeoJSON",
+      "description": "Returnerer den planlagte klippesti for det aktuelle job som en GeoJSON FeatureCollection. Tom, indtil stien er hentet."
+    },
+    "get_mow_progress_geojson": {
+      "name": "Hent klippefremskridt-GeoJSON",
+      "description": "Returnerer den del af det aktuelle jobs klippesti, der allerede er klippet, som en GeoJSON FeatureCollection; plæneklippere, der sender en dynamisk linje, returnerer den i stedet. Når et job kører, og intet kan vises endnu, henter den også det, laget tegnes ud fra, højst én gang i minuttet. Via Bluetooth holder en dynamisk linje sig selv opdateret."
+    },
+    "fetch_mow_path": {
+      "name": "Hent klippesti",
+      "description": "Henter klippestien for det job, plæneklipperen kører, medmindre en komplet sti allerede er gemt, og genopbygger klippefremskridtet ud fra den. Plæneklippere med en dynamisk linje henter også deres seneste linje. Via skyen sker det kun, når 'Aktivér hentning af klippesti (sky)' er slået til i indstillingerne; via Bluetooth altid. Returnerer, om en hentning blev startet."
+    },
+    "get_map_backup_progress": {
+      "name": "Hent status for kortsikkerhedskopi",
+      "description": "Returnerer, hvor langt en sikkerhedskopiering eller gendannelse af kortet er nået.",
+      "fields": {
+        "backup_id": {
+          "name": "Sikkerhedskopi-ID",
+          "description": "Sikkerhedskopi, hvis job skal kontrolleres."
+        },
+        "restore": {
+          "name": "Gendannelse",
+          "description": "Kontrollér en gendannelse i stedet for en sikkerhedskopiering."
+        }
+      }
+    },
+    "cancel_map_backup": {
+      "name": "Annullér kortsikkerhedskopi",
+      "description": "Annullerer en igangværende sikkerhedskopiering eller gendannelse af kortet.",
+      "fields": {
+        "backup_id": {
+          "name": "Sikkerhedskopi-ID",
+          "description": "Sikkerhedskopi, hvis job skal annulleres."
+        },
+        "restore": {
+          "name": "Gendannelse",
+          "description": "Annullér en gendannelse i stedet for en sikkerhedskopiering."
+        }
+      }
+    },
+    "delete_map_backup": {
+      "name": "Slet kortsikkerhedskopi",
+      "description": "Sletter en kortsikkerhedskopi fra Mammotion-skyen.",
+      "fields": {
+        "backup_id": {
+          "name": "Sikkerhedskopi-ID",
+          "description": "Sikkerhedskopi, der skal slettes."
+        }
+      }
     }
   },
   "exceptions": {
@@ -1183,6 +1416,102 @@
     },
     "start_task_unsupported_on_spino": {
       "message": "Start af en plan på forespørgsel understøttes ikke på Spino-poolrobotten — enhedens firmware har ingen 'kør nu'-kommando for gemte planer."
+    },
+    "grass_collection_unsupported": {
+      "message": "Denne plæneklipper understøtter ikke græsopsamling."
+    },
+    "map_backup_cloud_unavailable": {
+      "message": "Kortsikkerhedskopier kræver et fungerende login til Mammotion-skyen."
+    },
+    "map_backup_failed": {
+      "message": "Mammotion-skyen afviste anmodningen om kortsikkerhedskopi: {reason}"
+    },
+    "map_backup_device_not_found": {
+      "message": "{device_name} er ikke angivet til kortsikkerhedskopier på denne Mammotion-konto."
+    },
+    "mower_not_found": {
+      "message": "{entity_id} er ikke en Mammotion-plæneklipper."
+    },
+    "notification_unknown_code": {
+      "message": "Ukendt fejlkode {code}"
+    },
+    "notification_title_warnings": {
+      "message": "{device_name}: advarsler"
+    },
+    "notification_title_notifications": {
+      "message": "{device_name}: meddelelser"
+    },
+    "notification_title_self_check": {
+      "message": "{device_name}: {state}"
+    },
+    "self_check_emergency_stop": {
+      "message": "Nødstoppet er aktivt. Udløs det på plæneklipperen, før du starter igen."
+    },
+    "self_check_stop_button": {
+      "message": "STOP-knappen på plæneklipperen er trykket. Nulstil den på plæneklipperen, før du starter igen."
+    },
+    "self_check_safety_key_missing": {
+      "message": "Sikkerhedsnøglen er ikke isat. Sæt den i for at begynde at klippe."
+    },
+    "self_check_lifted": {
+      "message": "Plæneklipperen er løftet fra jorden. Sæt den tilbage på græsplænen."
+    },
+    "self_check_tilted": {
+      "message": "Plæneklipperen hælder. Flyt den til plant underlag."
+    },
+    "self_check_tipped_over": {
+      "message": "Plæneklipperen er væltet. Vend den tilbage på hjulene."
+    },
+    "self_check_bumper_missing": {
+      "message": "Sidekofangeren er ikke monteret. Montér den før klipning."
+    },
+    "self_check_rain": {
+      "message": "Der er registreret regn, og 'Ingen klipning på regnvejrsdage' er slået til. Klipningen kan starte, når regnen stopper, eller slå funktionen fra."
+    },
+    "self_check_low_battery": {
+      "message": "Batteriet er for lavt til at klippe. Lad plæneklipperen oplade."
+    },
+    "self_check_non_working_hours": {
+      "message": "Det er uden for plæneklipperens arbejdstid."
+    },
+    "self_check_rtk_station_moved": {
+      "message": "RTK-referencestationen er flyttet. Kontrollér dens placering i appen."
+    },
+    "self_check_outside_task_area": {
+      "message": "Plæneklipperen er uden for sit opgaveområde. Flyt den tilbage i et kortlagt område."
+    },
+    "self_check_wheel_motor_error": {
+      "message": "En hjulnavsmotor har meldt en fejl."
+    },
+    "self_check_blade_motor_overheated": {
+      "message": "Knivmotoren er for varm. Lad den køle af."
+    },
+    "self_check_dock_moved": {
+      "message": "Ladestationen er flyttet. Kontrollér dens placering i appen."
+    },
+    "self_check_no_task_area": {
+      "message": "Der blev ikke fundet noget opgaveområde. Opret et kort i appen."
+    },
+    "self_check_night_protection": {
+      "message": "Natbeskyttelse er slået til, så plæneklipperen klipper ikke om natten."
+    },
+    "self_check_rtk_not_ready": {
+      "message": "RTK-referencestationen er ikke klar endnu."
+    },
+    "self_check_weak_satellite_signal": {
+      "message": "Plæneklipperens satellitsignal er for svagt til at bestemme positionen."
+    },
+    "self_check_positioning_failure": {
+      "message": "Positioneringssystemet har svigtet."
+    },
+    "self_check_inavi_unavailable": {
+      "message": "iNavi-tjenesten er ikke tilgængelig."
+    },
+    "self_check_weak_rtk_signal": {
+      "message": "RTK-signalet er svagt. Kontrollér, hvor referencestationen er placeret."
+    },
+    "self_check_other": {
+      "message": "Plæneklipperen meldte en ukendt selvtestkode {code}."
     }
   }
 }

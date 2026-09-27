@@ -1,8 +1,8 @@
 # Mammotion — Home Assistant Integration (fork)
 
-A fork of [mikey0000/Mammotion-HA](https://github.com/mikey0000/Mammotion-HA) carrying two changes
+A fork of [mikey0000/Mammotion-HA](https://github.com/mikey0000/Mammotion-HA) carrying a change
 for setups where the mower **spends its working hours out of Bluetooth range** and falls back to the
-cloud while mowing. Everything else is upstream's work.
+cloud while mowing, plus two smaller fixes. Everything else is upstream's work.
 
 > **Most people should install [the original](https://github.com/mikey0000/Mammotion-HA) instead.**
 > This fork is a hobby effort, tested against one Luba 1 and one Yuka, with no support.
@@ -35,8 +35,8 @@ schedule. If that does not suit you, the original is actively maintained and is 
 12-hour window; exhausting it blocks every send for hours. Two code paths burned that budget during
 a single mow because both fired on mower status changes, which oscillate constantly while mowing.
 This fork holds one continuous report stream while the mower is active, renewed just inside the
-device's window, so a whole mow costs about one message per five minutes. The rate-limit error is
-also handled properly instead of surfacing as tracebacks and triggering a pointless re-login.
+device's window, so a whole mow costs about one message per five minutes. A background refresh that
+hits the quota degrades the device to offline quietly instead of raising an error.
 
 Mowers on firmware 1.30.25.1 or newer have no send quota at all, so this change is inert there.
 
@@ -44,6 +44,10 @@ Mowers on firmware 1.30.25.1 or newer have no send quota at all, so this change 
 resumable job in memory. On Luba 1 a paused job keeps its breakpoint until the mower is sent back
 out, unlike Luba 2 and Yuka — so this stays on while the mower sits in the dock with unfinished
 work, which its normal state does not reveal.
+
+**Area switches for deleted areas are removed.** Areas deleted on the mower could keep their switch
+in Home Assistant, and mowing one failed with "Invalid task area detected". Area switches are now
+checked against the mower's own area list.
 
 ## Setup
 

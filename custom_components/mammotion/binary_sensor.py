@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -11,12 +12,16 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pymammotion.data.model.device import MowingDevice
+from pymammotion.data.model.device import MowingDevice, PoolCleanerDevice
 from pymammotion.utility.device_type import DeviceType
 
 from . import MammotionConfigEntry
-from .coordinator import MammotionBaseUpdateCoordinator
-from .entity import MammotionBaseEntity
+from .coordinator import MammotionBaseUpdateCoordinator, MammotionSpinoCoordinator
+from .entity import MammotionBaseEntity, MammotionBaseSpinoEntity
+
+# ``rpt_dev_status.self_check_status`` is a single code, not a bitmask; the app shows
+# "Mowing is disabled on rainy days" for this one (BlockErrorBeanChangeUtils).
+SELF_CHECK_RAIN_DETECTED = 20
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -28,12 +33,36 @@ class MammotionBinarySensorEntityDescription(
     is_on_fn: Callable[[MowingDevice], bool | None]
 
 
+@dataclass(frozen=True, kw_only=True)
+class MammotionSpinoBinarySensorEntityDescription(
+    BinarySensorEntityDescription,
+):
+    """Describes a Mammotion Spino pool cleaner binary sensor entity."""
+
+    is_on_fn: Callable[[PoolCleanerDevice], bool | None]
+
+
 BINARY_SENSORS: tuple[MammotionBinarySensorEntityDescription, ...] = (
     MammotionBinarySensorEntityDescription(
         key="charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         is_on_fn=lambda mower_data: mower_data.report_data.dev.charge_state in (1, 2),
-        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MammotionBinarySensorEntityDescription(
+        key="rain_detected",
+        translation_key="rain_detected",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        is_on_fn=lambda mower_data: (
+            mower_data.report_data.dev.self_check_status == SELF_CHECK_RAIN_DETECTED
+        ),
+    ),
+)
+
+SPINO_BINARY_SENSORS: tuple[MammotionSpinoBinarySensorEntityDescription, ...] = (
+    MammotionSpinoBinarySensorEntityDescription(
+        key="spino_charging",
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+        is_on_fn=lambda spino_data: spino_data.pool_state.charging,
     ),
 )
 
@@ -75,6 +104,12 @@ async def async_setup_entry(
                 for entity_description in LUBA_1_ONLY_BINARY_SENSORS
             )
 
+    for spino in entry.runtime_data.spino:
+        async_add_entities(
+            MammotionSpinoBinarySensorEntity(spino.coordinator, entity_description)
+            for entity_description in SPINO_BINARY_SENSORS
+        )
+
 
 class MammotionBinarySensorEntity(MammotionBaseEntity, BinarySensorEntity):
     """Mammotion sensor entity."""
@@ -83,13 +118,34 @@ class MammotionBinarySensorEntity(MammotionBaseEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: MammotionBaseUpdateCoordinator,
+        coordinator: MammotionBaseUpdateCoordinator[Any],
         entity_description: MammotionBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor entity."""
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
         self._attr_translation_key = entity_description.translation_key
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        return self.entity_description.is_on_fn(self.coordinator.data)
+
+
+class MammotionSpinoBinarySensorEntity(MammotionBaseSpinoEntity, BinarySensorEntity):
+    """Mammotion Spino pool cleaner binary sensor entity."""
+
+    entity_description: MammotionSpinoBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: MammotionSpinoCoordinator,
+        entity_description: MammotionSpinoBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize the Spino binary sensor entity."""
+        super().__init__(coordinator, entity_description.key)
+        self.entity_description = entity_description
+        self._attr_translation_key = entity_description.key
 
     @property
     def is_on(self) -> bool | None:
